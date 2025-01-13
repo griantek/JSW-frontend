@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useCallback } from 'react';
 import { Input, Button, Spinner } from '@nextui-org/react';
 import { Search } from 'lucide-react';

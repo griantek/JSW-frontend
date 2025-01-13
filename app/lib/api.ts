@@ -1,24 +1,25 @@
 import { FilterOptions, Journal } from '../models';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
-const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
+const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 
-if (!API_URL || !API_KEY) {
-  throw new Error('Missing required environment variables');
-}
-
+// Remove the environment variables check since we're providing defaults
 export async function searchJournals(query: string, filters: FilterOptions): Promise<Journal[]> {
   try {
     const requestBody = { filters: { ...filters, searchText: query } };
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Only add API key if it exists
+    if (API_KEY) {
+      headers['Authorization'] = `Bearer ${API_KEY}`;
+    }
 
     const response = await fetch(`${API_URL}/api/journals/search`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${API_KEY}`,
-        // 'Api-Version': API_VERSION || 'v1',
-      },
+      headers,
       body: JSON.stringify(requestBody),
     });
     
