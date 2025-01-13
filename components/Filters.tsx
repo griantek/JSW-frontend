@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Checkbox,
   Dropdown,
@@ -18,16 +18,33 @@ import { SEARCH_FIELDS, PUBLISHERS, DATABASES } from '../app/constants/filters';
 interface FiltersProps {
   filters: FilterOptions;
   onFiltersChange: (filters: FilterOptions) => void;
+  useCiteScore: boolean;
+  setUseCiteScore: (value: boolean) => void;
+  useImpactFactor: boolean;
+  setUseImpactFactor: (value: boolean) => void;
+  isExpanded: boolean;
+  setIsExpanded: (value: boolean) => void;
+  disabled?: boolean; // Add this line
 }
 
-export function Filters({ filters, onFiltersChange }: FiltersProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export function Filters({ 
+  filters, 
+  onFiltersChange, 
+  useCiteScore, 
+  setUseCiteScore, 
+  useImpactFactor, 
+  setUseImpactFactor,
+  isExpanded,
+  setIsExpanded,
+  disabled = false // Add default value
+}: FiltersProps) {
 
   const updateFilters = (updates: Partial<FilterOptions>) => {
     onFiltersChange({ ...filters, ...updates });
   };
 
   const removeSearchField = (field: string) => {
+    if (field === 'title') return; // Prevent removing 'title'
     updateFilters({
       searchFields: filters.searchFields.filter(f => f !== field)
     });
@@ -47,8 +64,8 @@ export function Filters({ filters, onFiltersChange }: FiltersProps) {
 
   const resetRanges = () => {
     updateFilters({
-      citeScoreRange: [0, 100],
-      impactFactorRange: [0, 20]
+      citeScoreRange: [0, 1000],
+      impactFactorRange: [0, 300]
     });
   };
 
@@ -57,10 +74,8 @@ export function Filters({ filters, onFiltersChange }: FiltersProps) {
     const hasFilters = filters.searchFields.length > 0 || 
                       filters.publishers.length > 0 || 
                       filters.databases.length > 0 ||
-                      filters.citeScoreRange[0] > 0 ||
-                      filters.citeScoreRange[1] < 100 ||
-                      filters.impactFactorRange[0] > 0 ||
-                      filters.impactFactorRange[1] < 20;
+                      useCiteScore ||
+                      useImpactFactor;
 
     if (!hasFilters) return null;
 
@@ -107,9 +122,12 @@ export function Filters({ filters, onFiltersChange }: FiltersProps) {
           ))}
 
           {/* Range Filters */}
-          {(filters.citeScoreRange[0] > 0 || filters.citeScoreRange[1] < 100) && (
+          {useCiteScore && (
             <Chip
-              onClose={resetRanges}
+              onClose={() => {
+                setUseCiteScore(false);
+                resetRanges();
+              }}
               variant="flat"
               color="warning"
               className="px-2 py-1"
@@ -118,9 +136,12 @@ export function Filters({ filters, onFiltersChange }: FiltersProps) {
             </Chip>
           )}
 
-          {(filters.impactFactorRange[0] > 0 || filters.impactFactorRange[1] < 20) && (
+          {useImpactFactor && (
             <Chip
-              onClose={resetRanges}
+              onClose={() => {
+                setUseImpactFactor(false);
+                resetRanges();
+              }}
               variant="flat"
               color="warning"
               className="px-2 py-1"
@@ -134,16 +155,20 @@ export function Filters({ filters, onFiltersChange }: FiltersProps) {
             size="sm"
             color="danger"
             variant="light"
-            onClick={() => onFiltersChange({
-              searchFields: [],
-              publishers: [],
-              databases: [],
-              citeScoreRange: [0, 100],
-              impactFactorRange: [0, 20],
-            })}
+            onClick={() => {
+              setUseCiteScore(false);
+              setUseImpactFactor(false);
+              onFiltersChange({
+                searchFields: [],
+                publishers: [],
+                databases: [],
+                citeScoreRange: [0, 1000],
+                impactFactorRange: [0, 300],
+              });
+            }}
             className="ml-2"
           >
-            Clear All
+            Clear All Filters
           </Button>
         </div>
       </div>
@@ -184,8 +209,9 @@ export function Filters({ filters, onFiltersChange }: FiltersProps) {
               {SEARCH_FIELDS.map((field) => (
                 <Checkbox
                   key={field}
-                  isSelected={filters.searchFields.includes(field)}
+                  isSelected={filters.searchFields.includes(field) || field === 'title'}
                   onValueChange={(checked) => {
+                    if (field === 'title') return; // Prevent unchecking 'title'
                     updateFilters({
                       searchFields: checked 
                         ? [...filters.searchFields, field]
@@ -260,32 +286,56 @@ export function Filters({ filters, onFiltersChange }: FiltersProps) {
           {/* Range Sliders */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-medium mb-3">CiteScore Range</h3>
-              <Slider
-                label="CiteScore"
-                step={1}
-                minValue={0}
-                maxValue={100}
-                value={filters.citeScoreRange}
-                onChange={(value) => updateFilters({ 
-                  citeScoreRange: [value as number, filters.citeScoreRange[1]] 
-                })}
-                className="max-w-md"
-              />
+              <Checkbox
+                isSelected={useCiteScore}
+                onValueChange={setUseCiteScore}
+              >
+                Use CiteScore
+              </Checkbox>
+              {useCiteScore && (
+                <>
+                  <h3 className="font-medium mb-3">CiteScore Range</h3>
+                  <Slider
+                    label="CiteScore"
+                    step={1}
+                    minValue={0}
+                    maxValue={1000}
+                    value={filters.citeScoreRange}
+                    onChange={(value) => {
+                      if (Array.isArray(value) && value.length === 2) {
+                        updateFilters({ citeScoreRange: value as [number, number] });
+                      }
+                    }}
+                    className="max-w-md"
+                  />
+                </>
+              )}
             </div>
             <div>
-              <h3 className="font-medium mb-3">Impact Factor Range</h3>
-              <Slider
-                label="Impact Factor"
-                step={0.1}
-                minValue={0}
-                maxValue={20}
-                value={filters.impactFactorRange}
-                onChange={(value) => updateFilters({ 
-                  impactFactorRange: [value as number, filters.impactFactorRange[1]] 
-                })}
-                className="max-w-md"
-              />
+              <Checkbox
+                isSelected={useImpactFactor}
+                onValueChange={setUseImpactFactor}
+              >
+                Use Impact Factor
+              </Checkbox>
+              {useImpactFactor && (
+                <>
+                  <h3 className="font-medium mb-3">Impact Factor Range</h3>
+                  <Slider
+                    label="Impact Factor"
+                    step={0.1}
+                    minValue={0}
+                    maxValue={300}
+                    value={filters.impactFactorRange}
+                    onChange={(value) => {
+                      if (Array.isArray(value) && value.length === 2) {
+                        updateFilters({ impactFactorRange: value as [number, number] });
+                      }
+                    }}
+                    className="max-w-md"
+                  />
+                </>
+              )}
             </div>
           </div>
 
@@ -295,13 +345,17 @@ export function Filters({ filters, onFiltersChange }: FiltersProps) {
               <Button
                 color="danger"
                 variant="light"
-                onClick={() => onFiltersChange({
-                  searchFields: [],
-                  publishers: [],
-                  databases: [],
-                  citeScoreRange: [0, 100],
-                  impactFactorRange: [0, 20],
-                })}
+                onClick={() => {
+                  setUseCiteScore(false);
+                  setUseImpactFactor(false);
+                  onFiltersChange({
+                    searchFields: [],
+                    publishers: [],
+                    databases: [],
+                    citeScoreRange: [0, 1000],
+                    impactFactorRange: [0, 300],
+                  });
+                }}
               >
                 Clear All Filters
               </Button>
