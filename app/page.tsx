@@ -15,7 +15,7 @@ export default function JournalSearchPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [filters, setFilters] = useState<FilterOptions>({
-    searchFields: ['Title'], // Ensure 'Title' is always included
+    searchFields: ['Title'], // Ensure 'Title' is always included initially
     publishers: [],
     databases: [],
     citeScoreRange: [0, 100],
@@ -57,16 +57,14 @@ export default function JournalSearchPage() {
     setIsProcessing(true);
     
     const searchFilters: Partial<FilterOptions> = { ...filters };
-    // Ensure 'Title' is always included in the search logic
-    if (!searchFilters.searchFields) {
-      searchFilters.searchFields = ['Title'];
-    } else if (!searchFilters.searchFields.includes('Title')) {
-      searchFilters.searchFields.push('Title');
-    }
-    // Integrate 'Aims & Scope' with 'Title' without adding it to the displayed tags
-    const searchFieldsForBackend = [...searchFilters.searchFields];
-    if (!searchFieldsForBackend.includes('Aims & Scope')) {
-      searchFieldsForBackend.push('Aims & Scope');
+    // Ensure only the selected search field is used
+    let searchFieldsForBackend = [...(searchFilters.searchFields || [])];
+    if (searchFieldsForBackend.includes('Title')) {
+      if (!searchFieldsForBackend.includes('Aims & Scope')) {
+        searchFieldsForBackend.push('Aims & Scope');
+      }
+    } else {
+      searchFieldsForBackend = searchFieldsForBackend.filter(field => field !== 'Aims & Scope');
     }
     const filtersForBackend = { ...searchFilters, searchFields: searchFieldsForBackend };
 

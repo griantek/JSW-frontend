@@ -2,14 +2,16 @@
 
 import React from 'react';
 import {
-  Checkbox,
+  Radio,
+  RadioGroup,
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
   Button,
   Slider,
-  Chip
+  Chip,
+  Checkbox // Add this line
 } from '@nextui-org/react';
 import { ChevronDown, ChevronUp, SlidersHorizontal, X } from 'lucide-react';
 import { FilterOptions } from '../app/models';
@@ -42,13 +44,6 @@ export function Filters({
   const updateFilters = (updates: Partial<FilterOptions>) => {
     const newFilters = { ...filters, ...updates };
     onFiltersChange(newFilters);
-  };
-
-  const removeSearchField = (field: string) => {
-    const newSearchFields = filters.searchFields.filter(f => f !== field);
-    updateFilters({
-      searchFields: newSearchFields
-    });
   };
 
   const removePublisher = (publisher: string) => {
@@ -87,7 +82,6 @@ export function Filters({
           {filters.searchFields.filter(field => field !== 'Aims & Scope').map((field) => (
             <Chip
               key={field}
-              onClose={() => removeSearchField(field)}
               variant="flat"
               color="primary"
               className="px-2 py-1"
@@ -160,7 +154,7 @@ export function Filters({
               setUseCiteScore(false);
               setUseImpactFactor(false);
               onFiltersChange({
-                searchFields: [],
+                searchFields: ['Title'],
                 publishers: [],
                 databases: [],
                 citeScoreRange: [0, 1000],
@@ -207,22 +201,16 @@ export function Filters({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <h3 className="font-medium mb-3">Search Fields</h3>
-              {SEARCH_FIELDS.filter(field => field !== 'Aims & Scope').map((field) => (
-                <Checkbox
-                  key={field}
-                  isSelected={filters.searchFields.includes(field) || field === 'title'}
-                  onValueChange={(checked) => {
-                    if (field === 'title') return; // Prevent unchecking 'title'
-                    updateFilters({
-                      searchFields: checked 
-                        ? [...filters.searchFields, field]
-                        : filters.searchFields.filter(f => f !== field)
-                    });
-                  }}
-                >
-                  {field}
-                </Checkbox>
-              ))}
+              <RadioGroup
+                value={filters.searchFields[0]}
+                onChange={(e) => updateFilters({ searchFields: [e.target.value] })}
+              >
+                {SEARCH_FIELDS.map((field) => (
+                  <Radio key={field} value={field}>
+                    {field}
+                  </Radio>
+                ))}
+              </RadioGroup>
             </div>
 
             {/* Publishers Dropdown */}
@@ -350,7 +338,7 @@ export function Filters({
                   setUseCiteScore(false);
                   setUseImpactFactor(false);
                   onFiltersChange({
-                    searchFields: [],
+                    searchFields: ['Title'],
                     publishers: [],
                     databases: [],
                     citeScoreRange: [0, 1000],
