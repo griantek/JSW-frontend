@@ -69,7 +69,7 @@ const fallbackCopyToClipboard = (text: string) => {
   try {
     const successful = document.execCommand('copy');
     const msg = successful ? 'Copied to clipboard' : 'Failed to copy';
-    alert(msg);
+    // alert(msg);
   } catch (err) {
     console.error('Fallback: Oops, unable to copy', err);
   }
