@@ -14,9 +14,10 @@ import {
   Pagination,
   Popover,
   PopoverTrigger,
-  PopoverContent
+  PopoverContent,
+  Tooltip
 } from '@nextui-org/react';
-import { List, Grid, ChevronRight } from 'lucide-react';
+import { List, Grid, ChevronRight, Copy } from 'lucide-react';
 import { Journal } from '../app/models';
 
 const truncateText = (text: string, maxLength: number = 50) => {
@@ -30,6 +31,12 @@ const isValidValue = (value: any): boolean => {
   if (typeof value === 'string' && value.trim() === '') return false;
   if (typeof value === 'number' && isNaN(value)) return false;
   return true;
+};
+
+const copyToClipboard = (text: string) => {
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Copied to clipboard');
+  });
 };
 
 interface SearchResultsProps {
@@ -127,6 +134,7 @@ export function SearchResults({
               <TableColumn>Aims & Scope</TableColumn>
               <TableColumn>Indexed</TableColumn>
               <TableColumn>Publisher</TableColumn>
+              <TableColumn>Copy</TableColumn>
             </TableHeader>
             <TableBody>
               {items.map((journal) => (
@@ -195,6 +203,17 @@ export function SearchResults({
                       <span className="text-default-600">{journal.publisher}</span>
                     ) : '-'}
                   </TableCell>
+                  <TableCell>
+                    <Tooltip content="Copy">
+                      <Button 
+                        isIconOnly 
+                        variant="light" 
+                        onClick={() => copyToClipboard(JSON.stringify(journal, null, 2))}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </Tooltip>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -242,6 +261,15 @@ export function SearchResults({
                     </details>
                   )}
                 </div>
+                <Tooltip content="Copy">
+                  <Button 
+                    isIconOnly 
+                    variant="light" 
+                    onClick={() => copyToClipboard(JSON.stringify(journal, null, 2))}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </Tooltip>
               </CardBody>
             </Card>
           ))}

@@ -84,7 +84,7 @@ export function Filters({
       <div className="mb-4 p-4 border-b">
         <div className="flex flex-wrap gap-2">
           {/* Search Fields Tags */}
-          {filters.searchFields.map((field) => (
+          {filters.searchFields.filter(field => field !== 'Aims & Scope').map((field) => (
             <Chip
               key={field}
               onClose={() => removeSearchField(field)}

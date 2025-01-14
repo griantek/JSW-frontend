@@ -63,18 +63,21 @@ export default function JournalSearchPage() {
     } else if (!searchFilters.searchFields.includes('Title')) {
       searchFilters.searchFields.push('Title');
     }
-    // Integrate 'Aims & Scope' with 'Title'
-    if (searchFilters.searchFields.includes('Title')) {
-      searchFilters.searchFields.push('Aims & Scope');
+    // Integrate 'Aims & Scope' with 'Title' without adding it to the displayed tags
+    const searchFieldsForBackend = [...searchFilters.searchFields];
+    if (!searchFieldsForBackend.includes('Aims & Scope')) {
+      searchFieldsForBackend.push('Aims & Scope');
     }
+    const filtersForBackend = { ...searchFilters, searchFields: searchFieldsForBackend };
+
     if (!useCiteScore) {
-      delete searchFilters.citeScoreRange;
+      delete filtersForBackend.citeScoreRange;
     }
     if (!useImpactFactor) {
-      delete searchFilters.impactFactorRange;
+      delete filtersForBackend.impactFactorRange;
     }
     
-    debouncedSearch(searchQuery, searchFilters);
+    debouncedSearch(searchQuery, filtersForBackend);
   };
 
   // Handle enter key press
