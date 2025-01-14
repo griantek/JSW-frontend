@@ -49,7 +49,7 @@ Publisher: ${journal.publisher || '-'} \n
 const copyToClipboard = (text: string) => {
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(() => {
-      alert('Copied to clipboard');
+      // alert('Copied to clipboard');
     }).catch(err => {
       console.error('Failed to copy: ', err);
       fallbackCopyToClipboard(text);
