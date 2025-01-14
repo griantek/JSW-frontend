@@ -33,6 +33,19 @@ const isValidValue = (value: any): boolean => {
   return true;
 };
 
+const formatJournalForCopy = (journal: Journal) => {
+  const indexed = Array.isArray(journal.indexed) ? journal.indexed.join(', ') : journal.indexed || '-';
+  return `
+Title: ${journal.title || '-'} \n
+Link: ${journal.link || '-'} \n
+Impact Factor: ${isValidValue(journal.impactFactor) ? journal.impactFactor : '-'} \n
+CiteScore: ${isValidValue(journal.citeScore) ? journal.citeScore : '-'} \n
+ISSN: ${journal.issn || '-'} \n
+Indexed: ${indexed} \n
+Publisher: ${journal.publisher || '-'} \n
+  `.trim();
+};
+
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text).then(() => {
     alert('Copied to clipboard');
@@ -208,7 +221,7 @@ export function SearchResults({
                       <Button 
                         isIconOnly 
                         variant="light" 
-                        onClick={() => copyToClipboard(JSON.stringify(journal, null, 2))}
+                        onClick={() => copyToClipboard(formatJournalForCopy(journal))}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
@@ -265,7 +278,7 @@ export function SearchResults({
                   <Button 
                     isIconOnly 
                     variant="light" 
-                    onClick={() => copyToClipboard(JSON.stringify(journal, null, 2))}
+                    onClick={() => copyToClipboard(formatJournalForCopy(journal))}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
