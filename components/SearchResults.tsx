@@ -120,7 +120,7 @@ export function SearchResults({
           >
             <TableHeader>
               <TableColumn>Title</TableColumn>
-              <TableColumn>Link</TableColumn>
+              <TableColumn>Publisher</TableColumn>
               <TableColumn>Impact Factor</TableColumn>
               <TableColumn>ISSN</TableColumn>
               <TableColumn>Aims & Scope</TableColumn>
@@ -132,10 +132,8 @@ export function SearchResults({
                 <TableRow key={journal.issn + journal.title}>
                   <TableCell>{journal.title || '-'}</TableCell>
                   <TableCell>
-                    {journal.link ? (
-                      <a href={journal.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                        Visit Journal
-                      </a>
+                    {journal.publisher ? (
+                      <span className="text-default-600">{journal.publisher}</span>
                     ) : '-'}
                   </TableCell>
                   <TableCell>{isValidValue(journal.impactFactor) ? journal.impactFactor : '-'}</TableCell>

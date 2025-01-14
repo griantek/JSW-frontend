@@ -8,6 +8,10 @@ const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 export async function searchJournals(query: string, filters: FilterOptions): Promise<Journal[]> {
   try {
     const requestBody = { filters: { ...filters, searchText: query } };
+    
+    // Add console.log to see the request body
+    console.log('Request Body:', JSON.stringify(requestBody, null, 2));
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
