@@ -15,9 +15,13 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-  Tooltip
+  Tooltip,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem
 } from '@nextui-org/react';
-import { List, Grid, ChevronRight, Copy } from 'lucide-react';
+import { List, Grid, ChevronRight, Copy, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { Journal } from '../app/models';
 
 const truncateText = (text: string, maxLength: number = 50) => {
@@ -80,20 +84,50 @@ interface SearchResultsProps {
   journals: Journal[];
   viewMode: 'table' | 'card';
   onViewModeChange: (mode: 'table' | 'card') => void;
-  hasSearched: boolean; // New prop to track if search was performed
+  hasSearched: boolean;
+  onSortChange: (sortOption: string, sortOrder: 'asc' | 'desc') => void;
+  currentSortOption: string; // Add this
+  currentSortOrder: 'asc' | 'desc'; // Add this
 }
 
 export function SearchResults({ 
   journals, 
   viewMode, 
   onViewModeChange, 
-  hasSearched 
+  hasSearched,
+  onSortChange,
+  currentSortOption, // Add this
+  currentSortOrder, // Add this
 }: SearchResultsProps) {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
   const [visibleItems, setVisibleItems] = useState(10);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  const handleSortChange = (option: string) => {
+    let newSortOrder: 'asc' | 'desc';
+    
+    // If clicking the same option, toggle the order
+    if (option === currentSortOption) {
+      newSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      // For a new option, start with desc
+      newSortOrder = 'desc';
+    }
+    
+    // Only call the parent handler
+    onSortChange(option, newSortOrder);
+  };
+
+  const renderSortIcon = (option: string) => {
+    if (currentSortOption === option) {
+      return currentSortOrder === 'asc' ? 
+        <ArrowUp className="h-4 w-4 ml-2 text-primary" /> : 
+        <ArrowDown className="h-4 w-4 ml-2 text-primary" />;
+    }
+    return null;
+  };
 
   const uniqueJournals = useMemo(() => journals.reduce((acc, journal) => {
     if (!acc.some(j => j.issn === journal.issn)) {
@@ -128,12 +162,6 @@ export function SearchResults({
     };
   }, [uniqueJournals]);
 
-  useEffect(() => {
-    if (loadMoreRef.current && observerRef.current) {
-      observerRef.current.observe(loadMoreRef.current);
-    }
-  }, [viewMode]);
-
   if (!hasSearched) {
     return null; // Don't render anything if search hasn't been performed
   }
@@ -167,6 +195,34 @@ export function SearchResults({
           >
             <Grid className={viewMode === 'card' ? 'text-primary' : 'text-gray-400'} />
           </Button>
+          <div className="border-l h-6 mx-2"></div>
+          <Dropdown>
+            <DropdownTrigger>
+              <Button variant="light" endContent={<ChevronDown className="h-4 w-4" />}>
+                Sort by: {currentSortOption} ({currentSortOrder})
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu 
+              selectedKeys={new Set([currentSortOption])}
+              selectionMode="single"
+              aria-label="Sort options"
+            >
+              {[{ key: 'impactFactor', label: 'Impact Factor' },
+                { key: 'citeScore', label: 'CiteScore' },
+                { key: 'title', label: 'Title' },
+                { key: 'publisher', label: 'Publisher' }
+              ].map(({ key, label }) => (
+                <DropdownItem 
+                  key={key}
+                  onClick={() => handleSortChange(key)}
+                  endContent={renderSortIcon(key)}
+                  className="flex justify-between items-center"
+                >
+                  {label}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
         </div>
       </div>
 
@@ -283,7 +339,6 @@ export function SearchResults({
               ))}
             </TableBody>
           </Table>
-          <div ref={loadMoreRef} />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

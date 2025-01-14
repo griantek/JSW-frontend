@@ -4,9 +4,18 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
 const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 
-export async function searchJournals(query: string, filters: FilterOptions): Promise<Journal[]> {
+export async function searchJournals(query: string, filters: FilterOptions, sortOption: string, sortOrder: 'asc' | 'desc'): Promise<Journal[]> {
   try {
-    const requestBody = { filters: { ...filters, searchText: query } };
+    const requestBody = {
+      filters: { 
+        ...filters, 
+        searchText: query 
+      },
+      sorting: {
+        field: sortOption,
+        order: sortOrder
+      }
+    };
     
     // Add console.log to see the request body
     // console.log('Request Body:', JSON.stringify(requestBody, null, 2));
@@ -19,6 +28,8 @@ export async function searchJournals(query: string, filters: FilterOptions): Pro
     if (API_KEY) {
       headers['Authorization'] = `Bearer ${API_KEY}`;
     }
+
+    console.log('Request Body:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(`${API_URL}/api/journals/search`, {
       method: 'POST',

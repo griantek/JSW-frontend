@@ -26,16 +26,43 @@ export default function JournalSearchPage() {
   const [useImpactFactor, setUseImpactFactor] = useState(false);
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [sortOption, setSortOption] = useState('impactFactor');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [currentSearchState, setCurrentSearchState] = useState<{
+    query: string;
+    filters: FilterOptions;
+    sortOption: string;
+    sortOrder: 'asc' | 'desc';
+  } | null>(null);
 
   const cacheRef = useRef<{ [key: string]: Journal[] }>({});
 
   const debouncedSearch = useCallback(
-    debounce(async (query: string, searchFilters: Partial<FilterOptions>) => {
+    debounce(async (query: string, searchFilters: Partial<FilterOptions>, sortOption: string, sortOrder: 'asc' | 'desc') => {
       if (!query.trim()) return;
       
-      const cacheKey = JSON.stringify({ query, searchFilters });
+      // Create a complete FilterOptions object from the partial one, but only include ranges if they're enabled
+      const completeFilters: FilterOptions = {
+        searchFields: searchFilters.searchFields || ['Title'],
+        publishers: searchFilters.publishers || [],
+        databases: searchFilters.databases || [],
+        // Only include these if they exist in searchFilters
+        ...(searchFilters.citeScoreRange && { citeScoreRange: searchFilters.citeScoreRange }),
+        ...(searchFilters.impactFactorRange && { impactFactorRange: searchFilters.impactFactorRange }),
+      };
+      
+      const searchState = { 
+        query, 
+        filters: completeFilters, 
+        sortOption, 
+        sortOrder 
+      };
+      
+      const cacheKey = JSON.stringify(searchState);
+      
       if (cacheRef.current[cacheKey]) {
         setJournals(cacheRef.current[cacheKey]);
+        setCurrentSearchState(searchState);
         setHasSearched(true);
         setIsFiltersExpanded(false);
         setIsProcessing(false);
@@ -44,11 +71,12 @@ export default function JournalSearchPage() {
       }
 
       try {
-        const results = await searchJournals(query, searchFilters as FilterOptions);
+        const results = await searchJournals(query, completeFilters, sortOption, sortOrder);
         cacheRef.current[cacheKey] = results;
-        // Batch state updates
+        
         requestAnimationFrame(() => {
           setJournals(results);
+          setCurrentSearchState(searchState);
           setHasSearched(true);
           setIsFiltersExpanded(false);
           setIsProcessing(false);
@@ -70,33 +98,63 @@ export default function JournalSearchPage() {
     setIsLoading(true);
     setIsProcessing(true);
     
-    const searchFilters: Partial<FilterOptions> = { ...filters };
-    // Ensure only the selected search field is used
-    let searchFieldsForBackend = [...(searchFilters.searchFields || [])];
-    if (searchFieldsForBackend.includes('Title')) {
-      if (!searchFieldsForBackend.includes('Aims & Scope')) {
-        searchFieldsForBackend.push('Aims & Scope');
-      }
-    } else {
-      searchFieldsForBackend = searchFieldsForBackend.filter(field => field !== 'Aims & Scope');
-    }
-    const filtersForBackend = { ...searchFilters, searchFields: searchFieldsForBackend };
+    const searchFilters: Partial<FilterOptions> = {
+      searchFields: [...(filters.searchFields || [])],
+      publishers: filters.publishers,
+      databases: filters.databases,
+    };
 
-    if (!useCiteScore) {
-      delete filtersForBackend.citeScoreRange;
+    // Only add ranges if they're enabled
+    if (useCiteScore) {
+      searchFilters.citeScoreRange = filters.citeScoreRange;
     }
-    if (!useImpactFactor) {
-      delete filtersForBackend.impactFactorRange;
+    if (useImpactFactor) {
+      searchFilters.impactFactorRange = filters.impactFactorRange;
     }
-    
+
+    // Add Aims & Scope if Title is selected
+    if (searchFilters.searchFields?.includes('Title')) {
+      searchFilters.searchFields.push('Aims & Scope');
+    }
+
     try {
-      debouncedSearch(searchQuery, filtersForBackend);
+      debouncedSearch(searchQuery, searchFilters, sortOption, sortOrder);
     } catch (error) {
       console.error('Search error:', error);
       setIsProcessing(false);
       setIsLoading(false);
       alert('Something went wrong. Please try again.');
     }
+  };
+
+  const handleSortChange = (newSortOption: string, newSortOrder: 'asc' | 'desc') => {
+    // Only perform search if we have previous search state
+    if (!currentSearchState) return;
+
+    // Update the state immediately
+    setSortOption(newSortOption);
+    setSortOrder(newSortOrder);
+    setIsProcessing(true);
+
+    // Use current search state with new sort options
+    const searchFilters: Partial<FilterOptions> = { ...currentSearchState.filters };
+    
+    // Ensure we're using the current checkbox states
+    if (!useCiteScore) {
+      delete searchFilters.citeScoreRange;
+    }
+    if (!useImpactFactor) {
+      delete searchFilters.impactFactorRange;
+    }
+
+    // Force the debounce to execute immediately for sorting
+    debouncedSearch.cancel();
+    debouncedSearch(
+      currentSearchState.query,
+      searchFilters,
+      newSortOption,
+      newSortOrder
+    );
   };
 
   // Handle enter key press
@@ -150,6 +208,9 @@ export default function JournalSearchPage() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           hasSearched={hasSearched}
+          onSortChange={handleSortChange}
+          currentSortOption={sortOption} // Add this
+          currentSortOrder={sortOrder} // Add this
         />
       )}
 
