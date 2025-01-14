@@ -244,7 +244,7 @@ export function Filters({
 
             {/* Databases Dropdown */}
             <div className="space-y-2">
-              <h3 className="font-medium mb-3">Databases</h3>
+              <h3 className="font-medium mb-3">Indexing</h3>
               <Dropdown>
                 <DropdownTrigger>
                   <Button 
@@ -253,7 +253,7 @@ export function Filters({
                   >
                     {filters.databases.length 
                       ? `${filters.databases.length} selected`
-                      : "Select Databases"}
+                      : "Select Indexing"}
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownTrigger>
