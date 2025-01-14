@@ -4,13 +4,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || '';
 const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION || 'v1';
 
-// Remove the environment variables check since we're providing defaults
 export async function searchJournals(query: string, filters: FilterOptions): Promise<Journal[]> {
   try {
     const requestBody = { filters: { ...filters, searchText: query } };
     
     // Add console.log to see the request body
-    console.log('Request Body:', JSON.stringify(requestBody, null, 2));
+    // console.log('Request Body:', JSON.stringify(requestBody, null, 2));
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -27,7 +26,11 @@ export async function searchJournals(query: string, filters: FilterOptions): Pro
       body: JSON.stringify(requestBody),
     });
     
-    if (!response.ok) throw new Error('Search failed');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Search failed:', response.status, response.statusText, errorText);
+      throw new Error('Search failed');
+    }
     
     const data = await response.json();
     if (!data.success || !Array.isArray(data.data)) throw new Error('Invalid response format');

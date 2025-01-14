@@ -77,7 +77,14 @@ export default function JournalSearchPage() {
       delete filtersForBackend.impactFactorRange;
     }
     
-    debouncedSearch(searchQuery, filtersForBackend);
+    try {
+      debouncedSearch(searchQuery, filtersForBackend);
+    } catch (error) {
+      console.error('Search error:', error);
+      setIsProcessing(false);
+      setIsLoading(false);
+      alert('Something went wrong. Please try again.');
+    }
   };
 
   // Handle enter key press
