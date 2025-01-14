@@ -120,23 +120,27 @@ export function SearchResults({
           >
             <TableHeader>
               <TableColumn>Title</TableColumn>
-              <TableColumn>Publisher</TableColumn>
+              <TableColumn>Link</TableColumn>
               <TableColumn>Impact Factor</TableColumn>
+              <TableColumn>CiteScore</TableColumn>
               <TableColumn>ISSN</TableColumn>
               <TableColumn>Aims & Scope</TableColumn>
               <TableColumn>Indexed</TableColumn>
-              <TableColumn>CiteScore</TableColumn>
+              <TableColumn>Publisher</TableColumn>
             </TableHeader>
             <TableBody>
               {items.map((journal) => (
                 <TableRow key={journal.issn + journal.title}>
                   <TableCell>{journal.title || '-'}</TableCell>
                   <TableCell>
-                    {journal.publisher ? (
-                      <span className="text-default-600">{journal.publisher}</span>
+                    {journal.link ? (
+                      <a href={journal.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                        Link
+                      </a>
                     ) : '-'}
                   </TableCell>
                   <TableCell>{isValidValue(journal.impactFactor) ? journal.impactFactor : '-'}</TableCell>
+                  <TableCell>{isValidValue(journal.citeScore) ? journal.citeScore : '-'}</TableCell>
                   <TableCell>{journal.issn || '-'}</TableCell>
                   <TableCell>
                     {journal.aimsAndScope ? (
@@ -186,7 +190,11 @@ export function SearchResults({
                       <span className="text-gray-400">-</span>
                     )}
                   </TableCell>
-                  <TableCell>{isValidValue(journal.citeScore) ? journal.citeScore : '-'}</TableCell>
+                  <TableCell>
+                    {journal.publisher ? (
+                      <span className="text-default-600">{journal.publisher}</span>
+                    ) : '-'}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

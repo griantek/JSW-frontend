@@ -40,13 +40,14 @@ export function Filters({
 }: FiltersProps) {
 
   const updateFilters = (updates: Partial<FilterOptions>) => {
-    onFiltersChange({ ...filters, ...updates });
+    const newFilters = { ...filters, ...updates };
+    onFiltersChange(newFilters);
   };
 
   const removeSearchField = (field: string) => {
-    if (field === 'title') return; // Prevent removing 'title'
+    const newSearchFields = filters.searchFields.filter(f => f !== field);
     updateFilters({
-      searchFields: filters.searchFields.filter(f => f !== field)
+      searchFields: newSearchFields
     });
   };
 
@@ -206,7 +207,7 @@ export function Filters({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <h3 className="font-medium mb-3">Search Fields</h3>
-              {SEARCH_FIELDS.map((field) => (
+              {SEARCH_FIELDS.filter(field => field !== 'Aims & Scope').map((field) => (
                 <Checkbox
                   key={field}
                   isSelected={filters.searchFields.includes(field) || field === 'title'}

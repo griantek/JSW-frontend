@@ -15,7 +15,7 @@ export default function JournalSearchPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [filters, setFilters] = useState<FilterOptions>({
-    searchFields: ['Title'], // Ensure 'title' is always included
+    searchFields: ['Title'], // Ensure 'Title' is always included
     publishers: [],
     databases: [],
     citeScoreRange: [0, 100],
@@ -57,6 +57,16 @@ export default function JournalSearchPage() {
     setIsProcessing(true);
     
     const searchFilters: Partial<FilterOptions> = { ...filters };
+    // Ensure 'Title' is always included in the search logic
+    if (!searchFilters.searchFields) {
+      searchFilters.searchFields = ['Title'];
+    } else if (!searchFilters.searchFields.includes('Title')) {
+      searchFilters.searchFields.push('Title');
+    }
+    // Integrate 'Aims & Scope' with 'Title'
+    if (searchFilters.searchFields.includes('Title')) {
+      searchFilters.searchFields.push('Aims & Scope');
+    }
     if (!useCiteScore) {
       delete searchFilters.citeScoreRange;
     }
