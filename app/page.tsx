@@ -5,6 +5,7 @@ import { Search } from 'lucide-react';
 import debounce from 'lodash/debounce';
 import { Filters } from '../components/Filters';
 import { SearchResults } from '../components/SearchResults';
+import { GoToTopButton } from '../components/GoToTopButton'; // Import the GoToTopButton component
 import { searchJournals } from './lib/api';
 import type { Journal, FilterOptions } from './models';
 
@@ -151,6 +152,8 @@ export default function JournalSearchPage() {
           hasSearched={hasSearched}
         />
       )}
+
+      <GoToTopButton /> {/* Add the GoToTopButton component */}
     </main>
   );
 }
