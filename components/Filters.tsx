@@ -76,7 +76,7 @@ export function Filters({
     if (!hasFilters) return null;
 
     return (
-      <div className="mb-4 p-4 border-b">
+      <div className="p-4 border-b">
         <div className="flex flex-wrap gap-2">
           {/* Search Fields Tags */}
           {filters.searchFields.filter(field => field !== 'Aims & Scope').map((field) => (

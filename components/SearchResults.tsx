@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
   Table,
   TableHeader,
@@ -91,6 +91,9 @@ export function SearchResults({
 }: SearchResultsProps) {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
+  const [visibleItems, setVisibleItems] = useState(10);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const uniqueJournals = useMemo(() => journals.reduce((acc, journal) => {
     if (!acc.some(j => j.issn === journal.issn)) {
@@ -105,6 +108,31 @@ export function SearchResults({
     const end = start + rowsPerPage;
     return uniqueJournals.slice(start, end);
   }, [page, uniqueJournals]);
+
+  const visibleCards = useMemo(() => uniqueJournals.slice(0, visibleItems), [uniqueJournals, visibleItems]);
+
+  useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
+
+    observerRef.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        console.log('Load more triggered');
+        setVisibleItems((prev) => Math.min(prev + 10, uniqueJournals.length));
+      }
+    });
+
+    if (loadMoreRef.current) observerRef.current.observe(loadMoreRef.current);
+
+    return () => {
+      if (observerRef.current) observerRef.current.disconnect();
+    };
+  }, [uniqueJournals]);
+
+  useEffect(() => {
+    if (loadMoreRef.current && observerRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+  }, [viewMode]);
 
   if (!hasSearched) {
     return null; // Don't render anything if search hasn't been performed
@@ -255,10 +283,11 @@ export function SearchResults({
               ))}
             </TableBody>
           </Table>
+          <div ref={loadMoreRef} />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {uniqueJournals.map((journal) => (
+          {visibleCards.map((journal) => (
             <Card key={journal.issn + journal.title}>
               <CardBody>
                 <h3 className="text-lg font-semibold mb-2">{journal.title}</h3>
@@ -310,6 +339,7 @@ export function SearchResults({
               </CardBody>
             </Card>
           ))}
+          <div ref={loadMoreRef} />
         </div>
       )}
     </div>

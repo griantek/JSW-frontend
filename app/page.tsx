@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Input, Button, Spinner } from '@nextui-org/react';
 import { Search } from 'lucide-react';
 import debounce from 'lodash/debounce';
@@ -26,12 +26,25 @@ export default function JournalSearchPage() {
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const cacheRef = useRef<{ [key: string]: Journal[] }>({});
+
   const debouncedSearch = useCallback(
     debounce(async (query: string, searchFilters: Partial<FilterOptions>) => {
       if (!query.trim()) return;
       
+      const cacheKey = JSON.stringify({ query, searchFilters });
+      if (cacheRef.current[cacheKey]) {
+        setJournals(cacheRef.current[cacheKey]);
+        setHasSearched(true);
+        setIsFiltersExpanded(false);
+        setIsProcessing(false);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const results = await searchJournals(query, searchFilters as FilterOptions);
+        cacheRef.current[cacheKey] = results;
         // Batch state updates
         requestAnimationFrame(() => {
           setJournals(results);
