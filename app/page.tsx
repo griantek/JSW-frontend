@@ -16,11 +16,9 @@ export default function JournalSearchPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
   const [filters, setFilters] = useState<FilterOptions>({
-    searchFields: ['Title'], // Ensure 'Title' is always included initially
+    searchFields: ['Title'],
     publishers: [],
     databases: [],
-    citeScoreRange: [0, 100],
-    impactFactorRange: [0, 20],
   });
   const [useCiteScore, setUseCiteScore] = useState(false);
   const [useImpactFactor, setUseImpactFactor] = useState(false);
@@ -41,15 +39,20 @@ export default function JournalSearchPage() {
     debounce(async (query: string, searchFilters: Partial<FilterOptions>, sortOption: string, sortOrder: 'asc' | 'desc') => {
       if (!query.trim()) return;
       
-      // Create a complete FilterOptions object from the partial one, but only include ranges if they're enabled
+      // Create base filters without ranges
       const completeFilters: FilterOptions = {
         searchFields: searchFilters.searchFields || ['Title'],
         publishers: searchFilters.publishers || [],
         databases: searchFilters.databases || [],
-        // Only include these if they exist in searchFilters
-        ...(searchFilters.citeScoreRange && { citeScoreRange: searchFilters.citeScoreRange }),
-        ...(searchFilters.impactFactorRange && { impactFactorRange: searchFilters.impactFactorRange }),
       };
+      
+      // Only add ranges if they exist in searchFilters
+      if (searchFilters.citeScoreRange) {
+        completeFilters.citeScoreRange = searchFilters.citeScoreRange;
+      }
+      if (searchFilters.impactFactorRange) {
+        completeFilters.impactFactorRange = searchFilters.impactFactorRange;
+      }
       
       const searchState = { 
         query, 
@@ -89,7 +92,7 @@ export default function JournalSearchPage() {
         setIsLoading(false);
       }
     }, 500), // Increased debounce time
-    []
+    [useCiteScore, useImpactFactor] // Add dependencies
   );
 
   const handleSearch = async () => {
@@ -104,11 +107,11 @@ export default function JournalSearchPage() {
       databases: filters.databases,
     };
 
-    // Only add ranges if they're enabled
-    if (useCiteScore) {
+    // Only include ranges if they exist and are enabled
+    if (useCiteScore && filters.citeScoreRange) {
       searchFilters.citeScoreRange = filters.citeScoreRange;
     }
-    if (useImpactFactor) {
+    if (useImpactFactor && filters.impactFactorRange) {
       searchFilters.impactFactorRange = filters.impactFactorRange;
     }
 

@@ -29,6 +29,10 @@ interface FiltersProps {
   disabled?: boolean; // Add this line
 }
 
+// Add initial range values
+const DEFAULT_CITESCORE_RANGE: [number, number] = [0, 1000];
+const DEFAULT_IMPACT_FACTOR_RANGE: [number, number] = [0, 300];
+
 export function Filters({ 
   filters, 
   onFiltersChange, 
@@ -63,6 +67,30 @@ export function Filters({
       citeScoreRange: [0, 1000],
       impactFactorRange: [0, 300]
     });
+  };
+
+  const handleCiteScoreChange = (checked: boolean) => {
+    setUseCiteScore(checked);
+    const newFilters = { ...filters };
+    if (checked) {
+      // Initialize with default range when checked
+      newFilters.citeScoreRange = DEFAULT_CITESCORE_RANGE;
+    } else {
+      delete newFilters.citeScoreRange;
+    }
+    onFiltersChange(newFilters);
+  };
+
+  const handleImpactFactorChange = (checked: boolean) => {
+    setUseImpactFactor(checked);
+    const newFilters = { ...filters };
+    if (checked) {
+      // Initialize with default range when checked
+      newFilters.impactFactorRange = DEFAULT_IMPACT_FACTOR_RANGE;
+    } else {
+      delete newFilters.impactFactorRange;
+    }
+    onFiltersChange(newFilters);
   };
 
   // Filter tags section to show selected filters
@@ -127,7 +155,9 @@ export function Filters({
               color="warning"
               className="px-2 py-1"
             >
-              CiteScore: {filters.citeScoreRange[0]}-{filters.citeScoreRange[1]}
+              CiteScore: {filters.citeScoreRange ? 
+                `${filters.citeScoreRange[0]}-${filters.citeScoreRange[1]}` : 
+                `${DEFAULT_CITESCORE_RANGE[0]}-${DEFAULT_CITESCORE_RANGE[1]}`}
             </Chip>
           )}
 
@@ -141,7 +171,9 @@ export function Filters({
               color="warning"
               className="px-2 py-1"
             >
-              Impact Factor: {filters.impactFactorRange[0]}-{filters.impactFactorRange[1]}
+              Impact Factor: {filters.impactFactorRange ? 
+                `${filters.impactFactorRange[0]}-${filters.impactFactorRange[1]}` : 
+                `${DEFAULT_IMPACT_FACTOR_RANGE[0]}-${DEFAULT_IMPACT_FACTOR_RANGE[1]}`}
             </Chip>
           )}
 
@@ -277,7 +309,7 @@ export function Filters({
             <div>
               <Checkbox
                 isSelected={useCiteScore}
-                onValueChange={setUseCiteScore}
+                onValueChange={handleCiteScoreChange}
               >
                 Use CiteScore
               </Checkbox>
@@ -289,7 +321,7 @@ export function Filters({
                     step={1}
                     minValue={0}
                     maxValue={1000}
-                    value={filters.citeScoreRange}
+                    value={filters.citeScoreRange || DEFAULT_CITESCORE_RANGE}
                     onChange={(value) => {
                       if (Array.isArray(value) && value.length === 2) {
                         updateFilters({ citeScoreRange: value as [number, number] });
@@ -303,7 +335,7 @@ export function Filters({
             <div>
               <Checkbox
                 isSelected={useImpactFactor}
-                onValueChange={setUseImpactFactor}
+                onValueChange={handleImpactFactorChange}
               >
                 Use Impact Factor
               </Checkbox>
@@ -315,7 +347,7 @@ export function Filters({
                     step={0.1}
                     minValue={0}
                     maxValue={300}
-                    value={filters.impactFactorRange}
+                    value={filters.impactFactorRange || DEFAULT_IMPACT_FACTOR_RANGE}
                     onChange={(value) => {
                       if (Array.isArray(value) && value.length === 2) {
                         updateFilters({ impactFactorRange: value as [number, number] });
