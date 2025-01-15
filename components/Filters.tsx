@@ -15,7 +15,7 @@ import {
 } from '@nextui-org/react';
 import { ChevronDown, ChevronUp, SlidersHorizontal, X } from 'lucide-react';
 import { FilterOptions } from '../app/models';
-import { SEARCH_FIELDS, PUBLISHERS, DATABASES } from '../app/constants/filters';
+import { SEARCH_FIELDS, PUBLISHERS, DATABASES, QUARTILES } from '../app/constants/filters';
 
 interface FiltersProps {
   filters: FilterOptions;
@@ -27,6 +27,8 @@ interface FiltersProps {
   isExpanded: boolean;
   setIsExpanded: (value: boolean) => void;
   disabled?: boolean; // Add this line
+  useQuartiles?: boolean;  // Add this
+  setUseQuartiles?: (value: boolean) => void;  // Add this
 }
 
 // Add initial range values
@@ -42,7 +44,9 @@ export function Filters({
   setUseImpactFactor,
   isExpanded,
   setIsExpanded,
-  disabled = false // Add default value
+  disabled = false, // Add default value
+  useQuartiles = false,  // Add this
+  setUseQuartiles = () => {},  // Add this
 }: FiltersProps) {
 
   const updateFilters = (updates: Partial<FilterOptions>) => {
@@ -59,6 +63,12 @@ export function Filters({
   const removeDatabase = (database: string) => {
     updateFilters({
       databases: filters.databases.filter(d => d !== database)
+    });
+  };
+
+  const removeQuartile = (quartile: string) => {
+    updateFilters({
+      quartiles: filters.quartiles?.filter(q => q !== quartile) || []
     });
   };
 
@@ -93,13 +103,26 @@ export function Filters({
     onFiltersChange(newFilters);
   };
 
+  const handleQuartileChange = (checked: boolean) => {
+    setUseQuartiles(checked);
+    const newFilters = { ...filters };
+    if (!checked) {
+      delete newFilters.quartiles;
+    } else if (!newFilters.quartiles) {
+      newFilters.quartiles = []; // Initialize empty array when enabled
+    }
+    onFiltersChange(newFilters);
+  };
+
   // Filter tags section to show selected filters
   const SelectedFilters = () => {
     const hasFilters = filters.searchFields.length > 0 || 
                       filters.publishers.length > 0 || 
                       filters.databases.length > 0 ||
+                      (filters.quartiles && filters.quartiles.length > 0) || // Add this
                       useCiteScore ||
-                      useImpactFactor;
+                      useImpactFactor ||
+                      (useQuartiles && filters.quartiles && filters.quartiles.length > 0);
 
     if (!hasFilters) return null;
 
@@ -140,7 +163,20 @@ export function Filters({
               color="success"
               className="px-2 py-1"
             >
-              Database: {database}
+              Index : {database}
+            </Chip>
+          ))}
+
+          {/* Quartiles Tags */}
+          {filters.quartiles?.map((quartile) => (
+            <Chip
+              key={quartile}
+              onClose={() => removeQuartile(quartile)}
+              variant="flat"
+              color="default"
+              className="px-2 py-1"
+            >
+              Quartile: {quartile}
             </Chip>
           ))}
 
@@ -301,6 +337,43 @@ export function Filters({
                   ))}
                 </DropdownMenu>
               </Dropdown>
+            </div>
+
+            {/* Replace the Quartiles Dropdown with this */}
+            <div className="space-y-2">
+              <Checkbox
+                isSelected={useQuartiles}
+                onValueChange={handleQuartileChange}
+              >
+                Use Quartiles
+              </Checkbox>
+              {useQuartiles && (
+                <>
+                  <h3 className="font-medium mb-3">Quartiles</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {QUARTILES.map((quartile) => {
+                      const isSelected = filters.quartiles?.includes(quartile) || false;
+                      return (
+                        <Button
+                          key={quartile}
+                          variant={isSelected ? "solid" : "bordered"}
+                          color={isSelected ? "primary" : "default"}
+                          className={`min-w-[60px] ${isSelected ? 'bg-primary-500' : ''}`}
+                          onClick={() => {
+                            const currentQuartiles = filters.quartiles || [];
+                            const newQuartiles = isSelected
+                              ? currentQuartiles.filter(q => q !== quartile)
+                              : [...currentQuartiles, quartile];
+                            updateFilters({ quartiles: newQuartiles });
+                          }}
+                        >
+                          {quartile}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

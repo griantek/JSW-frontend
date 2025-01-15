@@ -9,7 +9,9 @@ export async function searchJournals(query: string, filters: FilterOptions, sort
     const requestBody = {
       filters: { 
         ...filters, 
-        searchText: query 
+        searchText: query,
+        // Ensure quartiles are only included if they exist
+        ...(filters.quartiles?.length ? { quartiles: filters.quartiles } : {})
       },
       sorting: {
         field: sortOption,
@@ -47,7 +49,7 @@ export async function searchJournals(query: string, filters: FilterOptions, sort
     
     
 
-    console.log('Response:', data.data);
+    // console.log('Response:', data.data);
     return data.data;
   } catch (error) {
     console.error('Search error:', error);

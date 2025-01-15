@@ -13,6 +13,7 @@ export type Journal = {
     searchFields: string[];
     publishers: string[];
     databases: string[];
-    citeScoreRange?: [number, number];    // Make optional with ?
-    impactFactorRange?: [number, number];  // Make optional with ?
+    quartiles?: string[];      // Add this line
+    citeScoreRange?: [number, number];
+    impactFactorRange?: [number, number];
   };

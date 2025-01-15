@@ -19,6 +19,7 @@ export default function JournalSearchPage() {
     searchFields: ['Title'],
     publishers: [],
     databases: [],
+    quartiles: [], // Add this
   });
   const [useCiteScore, setUseCiteScore] = useState(false);
   const [useImpactFactor, setUseImpactFactor] = useState(false);
@@ -32,6 +33,7 @@ export default function JournalSearchPage() {
     sortOption: string;
     sortOrder: 'asc' | 'desc';
   } | null>(null);
+  const [useQuartiles, setUseQuartiles] = useState(false);  // Add this
 
   const cacheRef = useRef<{ [key: string]: Journal[] }>({});
 
@@ -54,6 +56,11 @@ export default function JournalSearchPage() {
         completeFilters.impactFactorRange = searchFilters.impactFactorRange;
       }
       
+      // Only add quartiles if enabled and exist
+      if (useQuartiles && searchFilters.quartiles?.length) {
+        completeFilters.quartiles = searchFilters.quartiles;
+      }
+
       const searchState = { 
         query, 
         filters: completeFilters, 
@@ -92,7 +99,7 @@ export default function JournalSearchPage() {
         setIsLoading(false);
       }
     }, 500), // Increased debounce time
-    [useCiteScore, useImpactFactor] // Add dependencies
+    [useCiteScore, useImpactFactor, useQuartiles] // Add dependencies
   );
 
   const handleSearch = async () => {
@@ -105,6 +112,7 @@ export default function JournalSearchPage() {
       searchFields: [...(filters.searchFields || [])],
       publishers: filters.publishers,
       databases: filters.databases,
+      quartiles: useQuartiles ? filters.quartiles : undefined, // Add this line
     };
 
     // Only include ranges if they exist and are enabled
@@ -140,7 +148,10 @@ export default function JournalSearchPage() {
     setIsProcessing(true);
 
     // Use current search state with new sort options
-    const searchFilters: Partial<FilterOptions> = { ...currentSearchState.filters };
+    const searchFilters: Partial<FilterOptions> = { 
+      ...currentSearchState.filters,
+      quartiles: currentSearchState.filters.quartiles, // Add this
+    };
     
     // Ensure we're using the current checkbox states
     if (!useCiteScore) {
@@ -196,6 +207,8 @@ export default function JournalSearchPage() {
         setUseCiteScore={setUseCiteScore}
         useImpactFactor={useImpactFactor}
         setUseImpactFactor={setUseImpactFactor}
+        useQuartiles={useQuartiles}         // Add this
+        setUseQuartiles={setUseQuartiles}   // Add this
         isExpanded={isFiltersExpanded}
         setIsExpanded={setIsFiltersExpanded}
         disabled={isProcessing}
