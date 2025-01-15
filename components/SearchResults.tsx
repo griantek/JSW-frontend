@@ -145,12 +145,19 @@ export function SearchResults({
 
   const visibleCards = useMemo(() => uniqueJournals.slice(0, visibleItems), [uniqueJournals, visibleItems]);
 
+  // Reset visible items when view mode changes
   useEffect(() => {
+    setVisibleItems(10);
+  }, [viewMode]);
+
+  // Update the intersection observer effect to depend on viewMode
+  useEffect(() => {
+    if (viewMode !== 'card') return; // Only run for card view
+
     if (observerRef.current) observerRef.current.disconnect();
 
     observerRef.current = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
-        console.log('Load more triggered');
         setVisibleItems((prev) => Math.min(prev + 10, uniqueJournals.length));
       }
     });
@@ -160,7 +167,7 @@ export function SearchResults({
     return () => {
       if (observerRef.current) observerRef.current.disconnect();
     };
-  }, [uniqueJournals]);
+  }, [uniqueJournals, viewMode]); // Add viewMode as dependency
 
   if (!hasSearched) {
     return null; // Don't render anything if search hasn't been performed

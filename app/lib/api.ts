@@ -36,7 +36,6 @@ export async function searchJournals(query: string, filters: FilterOptions, sort
       headers,
       body: JSON.stringify(requestBody),
     });
-    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Search failed:', response.status, response.statusText, errorText);
@@ -46,6 +45,9 @@ export async function searchJournals(query: string, filters: FilterOptions, sort
     const data = await response.json();
     if (!data.success || !Array.isArray(data.data)) throw new Error('Invalid response format');
     
+    
+
+    console.log('Response:', data.data);
     return data.data;
   } catch (error) {
     console.error('Search error:', error);
