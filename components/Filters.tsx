@@ -288,17 +288,17 @@ export function Filters({
               >
                 {SEARCH_FIELDS.map((field) => (
                   <Radio key={field} value={field} className="max-w-full">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center justify-between w-full gap-2">
                       <span>{field}</span>
-                      {field === 'Title' && (
+                      {/* Only show checkbox when Title is selected */}
+                      {field === 'Title' && filters.searchFields[0] === 'Title' && (
                         <Checkbox
                           color="primary"
                           isSelected={useAimsAndScope}
                           onValueChange={setUseAimsAndScope}
                           size="sm"
-                          className="ml-auto"
                         >
-                          <span className="text-sm whitespace-nowrap">Include Aims & Scope</span>
+                          <span className="text-sm">Include Aims & Scope</span>
                         </Checkbox>
                       )}
                     </div>
