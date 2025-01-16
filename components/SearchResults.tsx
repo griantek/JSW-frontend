@@ -98,7 +98,7 @@ export function SearchResults({
   hasSearched,
   onSortChange,
   currentSortOption, // Add this
-  currentSortOrder, // Add this
+  currentSortOrder, // Add this,
 }: SearchResultsProps) {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
@@ -264,6 +264,7 @@ export function SearchResults({
             }
           >
             <TableHeader>
+              <TableColumn>S.No</TableColumn>  {/* Add this line */}
               <TableColumn>Title</TableColumn>
               <TableColumn>Link</TableColumn>
               <TableColumn>Impact Factor</TableColumn>
@@ -275,8 +276,12 @@ export function SearchResults({
               <TableColumn>Copy</TableColumn>
             </TableHeader>
             <TableBody>
-              {items.map((journal) => (
+              {items.map((journal, index) => (
                 <TableRow key={journal.issn + journal.title}>
+                  <TableCell>
+                    {/* Calculate serial number based on current page */}
+                    {(page - 1) * rowsPerPage + index + 1}
+                  </TableCell>
                   <TableCell>{journal.title || '-'}</TableCell>
                   <TableCell>
                     {journal.link ? (
