@@ -243,10 +243,9 @@ export function SearchResults({
   // Update the renderHeaderActions function
   const renderHeaderActions = () => (
     <div className="flex justify-center sm:justify-end items-center">
-      
-      {/* Group 1: Copy Selection Button (when items are selected) */}
+      {/* Desktop Copy Button */}
       {Object.keys(selectedItems).length > 0 && (
-        <div className="flex items-center px-4">
+        <div className="hidden sm:flex items-center px-4">
           <Tooltip content="Copy Selected">
             <Button
               isIconOnly
@@ -262,66 +261,71 @@ export function SearchResults({
         </div>
       )}
 
-      {/* Group 2: View Mode Controls */}
-      <div className="flex items-center gap-2 px-4 py-2 bg-default-100 rounded-lg">
-        <span className="text-sm text-default-600 hidden sm:block">View:</span>
-        <div className="flex gap-1">
-          <Button
-            isIconOnly
-            size="sm"
-            variant={viewMode === 'table' ? "solid" : "light"}
-            onClick={() => onViewModeChange('table')}
-          >
-            <List className={viewMode === 'table' ? 'text-white' : 'text-default-500'} />
-          </Button>
-          <Button
-            isIconOnly
-            size="sm"
-            variant={viewMode === 'card' ? "solid" : "light"}
-            onClick={() => onViewModeChange('card')}
-          >
-            <Grid className={viewMode === 'card' ? 'text-white' : 'text-default-500'} />
-          </Button>
+      {/* Controls Container */}
+      <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
+        {/* View Mode Controls */}
+        <div className="flex items-center justify-center bg-default-100 rounded-lg p-2">
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-default-600 hidden sm:block mr-2">View:</span>
+            <div className="flex gap-1">
+              <Button
+                isIconOnly
+                size="sm"
+                variant={viewMode === 'table' ? "solid" : "light"}
+                onClick={() => onViewModeChange('table')}
+              >
+                <List className={viewMode === 'table' ? 'text-white' : 'text-default-500'} />
+              </Button>
+              <Button
+                isIconOnly
+                size="sm"
+                variant={viewMode === 'card' ? "solid" : "light"}
+                onClick={() => onViewModeChange('card')}
+              >
+                <Grid className={viewMode === 'card' ? 'text-white' : 'text-default-500'} />
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Group 3: Sort Controls */}
-      <div className="flex items-center gap-2 px-4 py-2 bg-default-100 rounded-lg ml-2">
-        <span className="text-sm text-default-600 hidden sm:block">Sort:</span>
-        <Dropdown>
-          <DropdownTrigger>
-            <Button 
-              variant="light" 
-              size="sm"
-              endContent={<ChevronDown className="h-4 w-4" />}
-              className="min-w-[120px]"
+        {/* Sort Controls */}
+        <div className="flex items-center justify-center bg-default-100 rounded-lg p-2">
+          <Dropdown>
+            <DropdownTrigger>
+              <Button 
+                variant="light" 
+                size="sm"
+                endContent={<ChevronDown className="h-4 w-4 flex-shrink-0" />}
+                className="min-w-[120px] justify-between"
+              >
+                <span className="text-sm text-default-600 hidden sm:inline mr-2">Sort:</span>
+                <span className="truncate text-sm">
+                  {currentSortOption} ({currentSortOrder})
+                </span>
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu 
+              selectedKeys={new Set([currentSortOption])}
+              selectionMode="single"
+              aria-label="Sort options"
             >
-              <span className="truncate">
-                {currentSortOption} ({currentSortOrder})
-              </span>
-            </Button>
-          </DropdownTrigger>
-          <DropdownMenu 
-          selectedKeys={new Set([currentSortOption])}
-          selectionMode="single"
-          aria-label="Sort options"
-        >
-          {[{ key: 'impactFactor', label: 'Impact Factor' },
-            { key: 'citeScore', label: 'CiteScore' },
-            { key: 'title', label: 'Title' },
-            { key: 'publisher', label: 'Publisher' }
-          ].map(({ key, label }) => (
-            <DropdownItem 
-              key={key}
-              onClick={() => handleSortChange(key)}
-              endContent={renderSortIcon(key)}
-              className="flex justify-between items-center"
-            >
-              {label}
-            </DropdownItem>
-          ))}
-        </DropdownMenu>
-        </Dropdown>
+              {[{ key: 'impactFactor', label: 'Impact Factor' },
+                { key: 'citeScore', label: 'CiteScore' },
+                { key: 'title', label: 'Title' },
+                { key: 'publisher', label: 'Publisher' }
+              ].map(({ key, label }) => (
+                <DropdownItem 
+                  key={key}
+                  onClick={() => handleSortChange(key)}
+                  endContent={renderSortIcon(key)}
+                  className="flex justify-between items-center"
+                >
+                  {label}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
+        </div>
       </div>
     </div>
   );
@@ -338,8 +342,9 @@ export function SearchResults({
     );
   }
 
+  // Update the main return section to include the FAB
   return (
-    <div>
+    <div className="relative">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 bg-content1 p-4 rounded-lg shadow-sm">
         <h2 className="text-xl font-semibold text-center sm:text-left">
           Found {uniqueJournals.length} {uniqueJournals.length === 1 ? 'result' : 'results'}
@@ -543,6 +548,34 @@ export function SearchResults({
           <div ref={loadMoreRef} />
         </div>
       )}
+
+      {/* Mobile Copy FAB */}
+      {viewMode === 'table' && Object.keys(selectedItems).length > 0 && (
+        <div className="fixed bottom-24 right-4 block sm:hidden z-50">
+          <Button
+            isIconOnly
+            variant="solid"
+            color="primary"
+            size="lg"
+            className="shadow-lg rounded-full h-14 w-14"
+            onClick={copySelectedItems}
+          >
+            <div className="relative">
+              <CopyCheck className="h-6 w-6" />
+              <div className="absolute -top-2 -right-2 bg-danger rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="text-xs text-white font-medium">
+                  {Object.keys(selectedItems).length}
+                </span>
+              </div>
+            </div>
+          </Button>
+        </div>
+      )}
+
+      {/* Ensure GoToTop button is positioned correctly */}
+      <div className="fixed bottom-6 right-4 z-50">
+        {/* GoToTop button content */}
+      </div>
     </div>
   );
 }

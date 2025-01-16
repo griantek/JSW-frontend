@@ -31,7 +31,7 @@ export async function searchJournals(query: string, filters: FilterOptions, sort
       headers['Authorization'] = `Bearer ${API_KEY}`;
     }
 
-    console.log('Request Body:', JSON.stringify(requestBody, null, 2));
+    // console.log('Request Body:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(`${API_URL}/api/journals/search`, {
       method: 'POST',
