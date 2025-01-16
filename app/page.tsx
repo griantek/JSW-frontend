@@ -110,14 +110,14 @@ export default function JournalSearchPage() {
     setIsProcessing(true);
     
     const searchFilters: Partial<FilterOptions> = {
-      // Include Aims & Scope only when Title is selected and checkbox is checked
+      // Simplify searchFields logic to avoid duplication
       searchFields: [
-        ...filters.searchFields,
+        filters.searchFields[0],
         ...(filters.searchFields[0] === 'Title' && useAimsAndScope ? ['Aims & Scope'] : [])
       ],
       publishers: filters.publishers,
       databases: filters.databases,
-      quartiles: useQuartiles ? filters.quartiles : undefined, // Add this line
+      quartiles: useQuartiles ? filters.quartiles : undefined,
     };
 
     // Only include ranges if they exist and are enabled
@@ -126,11 +126,6 @@ export default function JournalSearchPage() {
     }
     if (useImpactFactor && filters.impactFactorRange) {
       searchFilters.impactFactorRange = filters.impactFactorRange;
-    }
-
-    // Add Aims & Scope if Title is selected
-    if (searchFilters.searchFields?.includes('Title')) {
-      searchFilters.searchFields.push('Aims & Scope');
     }
 
     try {
