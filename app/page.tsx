@@ -34,6 +34,7 @@ export default function JournalSearchPage() {
     sortOrder: 'asc' | 'desc';
   } | null>(null);
   const [useQuartiles, setUseQuartiles] = useState(false);  // Add this
+  const [useAimsAndScope, setUseAimsAndScope] = useState(false);  // Add this
 
   const cacheRef = useRef<{ [key: string]: Journal[] }>({});
 
@@ -109,7 +110,11 @@ export default function JournalSearchPage() {
     setIsProcessing(true);
     
     const searchFilters: Partial<FilterOptions> = {
-      searchFields: [...(filters.searchFields || [])],
+      // Include Aims & Scope only when Title is selected and checkbox is checked
+      searchFields: [
+        ...filters.searchFields,
+        ...(filters.searchFields[0] === 'Title' && useAimsAndScope ? ['Aims & Scope'] : [])
+      ],
       publishers: filters.publishers,
       databases: filters.databases,
       quartiles: useQuartiles ? filters.quartiles : undefined, // Add this line
@@ -209,6 +214,8 @@ export default function JournalSearchPage() {
         setUseImpactFactor={setUseImpactFactor}
         useQuartiles={useQuartiles}         // Add this
         setUseQuartiles={setUseQuartiles}   // Add this
+        useAimsAndScope={useAimsAndScope}         // Add this
+        setUseAimsAndScope={setUseAimsAndScope}   // Add this
         isExpanded={isFiltersExpanded}
         setIsExpanded={setIsFiltersExpanded}
         disabled={isProcessing}

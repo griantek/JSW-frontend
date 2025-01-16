@@ -183,30 +183,39 @@ export function SearchResults({
 
   return (
     <div>
-      <div className="flex justify-between mb-4">
-        <h2 className="text-xl font-semibold">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+        <h2 className="text-xl font-semibold text-center sm:text-left">
           Found {uniqueJournals.length} {uniqueJournals.length === 1 ? 'result' : 'results'}
         </h2>
-        <div className="flex gap-2 items-center">
-          <Button
-            isIconOnly
-            variant="light"
-            onClick={() => onViewModeChange('table')}
-          >
-            <List className={viewMode === 'table' ? 'text-primary' : 'text-gray-400'} />
-          </Button>
-          <Button
-            isIconOnly
-            variant="light"
-            onClick={() => onViewModeChange('card')}
-          >
-            <Grid className={viewMode === 'card' ? 'text-primary' : 'text-gray-400'} />
-          </Button>
+        <div className="flex justify-center sm:justify-end gap-2 items-center">
+          <div className="flex gap-2">
+            <Button
+              isIconOnly
+              variant="light"
+              onClick={() => onViewModeChange('table')}
+            >
+              <List className={viewMode === 'table' ? 'text-primary' : 'text-gray-400'} />
+            </Button>
+            <Button
+              isIconOnly
+              variant="light"
+              onClick={() => onViewModeChange('card')}
+            >
+              <Grid className={viewMode === 'card' ? 'text-primary' : 'text-gray-400'} />
+            </Button>
+          </div>
           <div className="border-l h-6 mx-2"></div>
           <Dropdown>
             <DropdownTrigger>
-              <Button variant="light" endContent={<ChevronDown className="h-4 w-4" />}>
-                Sort by: {currentSortOption} ({currentSortOrder})
+              <Button 
+                variant="light" 
+                endContent={<ChevronDown className="h-4 w-4" />}
+                className="min-w-[120px]"
+              >
+                <span className="hidden sm:inline">Sort by: </span>
+                <span className="truncate">
+                  {currentSortOption} ({currentSortOrder})
+                </span>
               </Button>
             </DropdownTrigger>
             <DropdownMenu 

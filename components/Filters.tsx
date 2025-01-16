@@ -29,6 +29,8 @@ interface FiltersProps {
   disabled?: boolean; // Add this line
   useQuartiles?: boolean;  // Add this
   setUseQuartiles?: (value: boolean) => void;  // Add this
+  useAimsAndScope?: boolean;  // Add this
+  setUseAimsAndScope?: (value: boolean) => void;  // Add this
 }
 
 // Add initial range values
@@ -47,6 +49,8 @@ export function Filters({
   disabled = false, // Add default value
   useQuartiles = false,  // Add this
   setUseQuartiles = () => {},  // Add this
+  useAimsAndScope = false,  // Add this
+  setUseAimsAndScope = () => {},  // Add this
 }: FiltersProps) {
 
   const updateFilters = (updates: Partial<FilterOptions>) => {
@@ -260,40 +264,64 @@ export function Filters({
       {/* Selected Filters Display */}
       <SelectedFilters />
 
-      {/* Filter Content - Rest of the component remains the same */}
-
       {/* Filter Content */}
       {isExpanded && (
         <div className="p-4 space-y-6">
-          {/* Search Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <h3 className="font-medium mb-3">Search Fields</h3>
+          {/* Main grid container with better responsive layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+            {/* Search Fields - Full width on small screens */}
+            <div className="sm:col-span-2 lg:col-span-1 space-y-3">
+              <h3 className="font-medium">Search Fields</h3>
               <RadioGroup
                 value={filters.searchFields[0]}
-                onChange={(e) => updateFilters({ searchFields: [e.target.value] })}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  updateFilters({ 
+                    searchFields: [value]
+                  });
+                  // Reset Aims & Scope checkbox when switching away from Title
+                  if (value !== 'Title') {
+                    setUseAimsAndScope(false);
+                  }
+                }}
+                className="space-y-2"
               >
                 {SEARCH_FIELDS.map((field) => (
-                  <Radio key={field} value={field}>
-                    {field}
+                  <Radio key={field} value={field} className="max-w-full">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span>{field}</span>
+                      {field === 'Title' && (
+                        <Checkbox
+                          color="primary"
+                          isSelected={useAimsAndScope}
+                          onValueChange={setUseAimsAndScope}
+                          size="sm"
+                          className="ml-auto"
+                        >
+                          <span className="text-sm whitespace-nowrap">Include Aims & Scope</span>
+                        </Checkbox>
+                      )}
+                    </div>
                   </Radio>
                 ))}
               </RadioGroup>
             </div>
 
-            {/* Publishers Dropdown */}
-            <div className="space-y-2">
-              <h3 className="font-medium mb-3">Publishers</h3>
+            {/* Publishers Dropdown - Responsive width */}
+            <div className="space-y-3">
+              <h3 className="font-medium">Publishers</h3>
               <Dropdown>
                 <DropdownTrigger>
                   <Button 
                     variant="bordered"
-                    className="w-full justify-between"
+                    className="w-full justify-between min-h-unit-10"
                   >
-                    {filters.publishers.length 
-                      ? `${filters.publishers.length} selected`
-                      : "Select Publishers"}
-                    <ChevronDown className="h-4 w-4" />
+                    <span className="truncate">
+                      {filters.publishers.length 
+                        ? `${filters.publishers.length} selected`
+                        : "Select Publishers"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 flex-shrink-0" />
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
@@ -310,19 +338,21 @@ export function Filters({
               </Dropdown>
             </div>
 
-            {/* Databases Dropdown */}
-            <div className="space-y-2">
-              <h3 className="font-medium mb-3">Indexing</h3>
+            {/* Databases Dropdown - Responsive width */}
+            <div className="space-y-3">
+              <h3 className="font-medium">Indexing</h3>
               <Dropdown>
                 <DropdownTrigger>
                   <Button 
                     variant="bordered"
-                    className="w-full justify-between"
+                    className="w-full justify-between min-h-unit-10"
                   >
-                    {filters.databases.length 
-                      ? `${filters.databases.length} selected`
-                      : "Select Indexing"}
-                    <ChevronDown className="h-4 w-4" />
+                    <span className="truncate">
+                      {filters.databases.length 
+                        ? `${filters.databases.length} selected`
+                        : "Select Indexing"}
+                    </span>
+                    <ChevronDown className="h-4 w-4 flex-shrink-0" />
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
@@ -339,8 +369,8 @@ export function Filters({
               </Dropdown>
             </div>
 
-            {/* Replace the Quartiles Dropdown with this */}
-            <div className="space-y-2">
+            {/* Quartiles Section - Better responsive layout */}
+            <div className="sm:col-span-2 lg:col-span-3 space-y-3">
               <Checkbox
                 isSelected={useQuartiles}
                 onValueChange={handleQuartileChange}
@@ -348,8 +378,8 @@ export function Filters({
                 Use Quartiles
               </Checkbox>
               {useQuartiles && (
-                <>
-                  <h3 className="font-medium mb-3">Quartiles</h3>
+                <div className="mt-2">
+                  <h3 className="font-medium mb-2">Quartiles</h3>
                   <div className="flex flex-wrap gap-2">
                     {QUARTILES.map((quartile) => {
                       const isSelected = filters.quartiles?.includes(quartile) || false;
@@ -372,14 +402,14 @@ export function Filters({
                       );
                     })}
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Range Sliders */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+          {/* Range Sliders - Better responsive layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t">
+            <div className="space-y-3">
               <Checkbox
                 isSelected={useCiteScore}
                 onValueChange={handleCiteScoreChange}
@@ -387,8 +417,8 @@ export function Filters({
                 Use CiteScore
               </Checkbox>
               {useCiteScore && (
-                <>
-                  <h3 className="font-medium mb-3">CiteScore Range</h3>
+                <div className="space-y-2">
+                  <h3 className="font-medium">CiteScore Range</h3>
                   <Slider
                     label="CiteScore"
                     step={1}
@@ -400,12 +430,12 @@ export function Filters({
                         updateFilters({ citeScoreRange: value as [number, number] });
                       }
                     }}
-                    className="max-w-md"
+                    className="max-w-full px-1"
                   />
-                </>
+                </div>
               )}
             </div>
-            <div>
+            <div className="space-y-3">
               <Checkbox
                 isSelected={useImpactFactor}
                 onValueChange={handleImpactFactorChange}
@@ -413,8 +443,8 @@ export function Filters({
                 Use Impact Factor
               </Checkbox>
               {useImpactFactor && (
-                <>
-                  <h3 className="font-medium mb-3">Impact Factor Range</h3>
+                <div className="space-y-2">
+                  <h3 className="font-medium">Impact Factor Range</h3>
                   <Slider
                     label="Impact Factor"
                     step={0.1}
@@ -426,35 +456,34 @@ export function Filters({
                         updateFilters({ impactFactorRange: value as [number, number] });
                       }
                     }}
-                    className="max-w-md"
+                    className="max-w-full px-1"
                   />
-                </>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Clear Filters Button */}
-          {1 > 0 && (
-            <div className="flex justify-end pt-4 border-t">
-              <Button
-                color="danger"
-                variant="light"
-                onClick={() => {
-                  setUseCiteScore(false);
-                  setUseImpactFactor(false);
-                  onFiltersChange({
-                    searchFields: ['Title'],
-                    publishers: [],
-                    databases: [],
-                    citeScoreRange: [0, 1000],
-                    impactFactorRange: [0, 300],
-                  });
-                }}
-              >
-                Clear All Filters
-              </Button>
-            </div>
-          )}
+          {/* Clear Filters Button - Consistent positioning */}
+          {/* <div className="flex justify-end pt-4 border-t">
+            <Button
+              color="danger"
+              variant="light"
+              className="min-w-[120px]"
+              onClick={() => {
+                setUseCiteScore(false);
+                setUseImpactFactor(false);
+                onFiltersChange({
+                  searchFields: ['Title'],
+                  publishers: [],
+                  databases: [],
+                  citeScoreRange: [0, 1000],
+                  impactFactorRange: [0, 300],
+                });
+              }}
+            >
+              Clear All Filters
+            </Button>
+          </div> */}
         </div>
       )}
     </div>
