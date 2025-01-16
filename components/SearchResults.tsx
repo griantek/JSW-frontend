@@ -24,10 +24,11 @@ import {
 import { List, Grid, ChevronRight, Copy, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { Journal } from '../app/models';
 
-const truncateText = (text: string, maxLength: number = 50) => {
+const truncateText = (text: string, maxLength: number = 50, isCompactColumn: boolean = false) => {
   if (!text) return '-';
-  if (text.length <= maxLength) return text;
-  return `${text.substring(0, maxLength)}...`;
+  const length = isCompactColumn ? 30 : maxLength; // Use 30 characters for compact columns
+  if (text.length <= length) return text;
+  return `${text.substring(0, length)}...`;
 };
 
 const isValidValue = (value: any): boolean => {
@@ -294,10 +295,10 @@ export function SearchResults({
                           <Button 
                             size="sm" 
                             variant="light" 
-                            className="text-primary text-left justify-start"
-                            endContent={<ChevronRight className="h-4 w-4 flex-shrink-0" />}
+                            className="text-primary text-left justify-start px-2 min-w-0 h-auto py-1"
+                            endContent={<ChevronRight className="h-3 w-3 flex-shrink-0" />}
                           >
-                            {truncateText(journal.aimsAndScope)}
+                            {truncateText(journal.aimsAndScope, 50, true)}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent>
@@ -318,16 +319,18 @@ export function SearchResults({
                           <Button 
                             size="sm" 
                             variant="light" 
-                            className="text-primary text-left justify-start"
-                            endContent={<ChevronRight className="h-4 w-4 flex-shrink-0" />}
+                            className="text-primary text-left justify-start px-2 min-w-0 h-auto py-1"
+                            endContent={<ChevronRight className="h-3 w-3 flex-shrink-0" />}
                           >
-                            {truncateText(Array.isArray(journal.indexed) ? journal.indexed.join(', ') : journal.indexed)}
+                            {truncateText(Array.isArray(journal.indexed) ? journal.indexed.join(', ') : journal.indexed, 50, true)}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent>
                           <div className="px-4 py-3 max-w-[400px]">
                             <h4 className="font-semibold mb-2">Indexed</h4>
-                            <p className="text-sm text-gray-600">{Array.isArray(journal.indexed) ? journal.indexed.join(', ') : journal.indexed}</p>
+                            <p className="text-sm text-gray-600">
+                              {Array.isArray(journal.indexed) ? journal.indexed.join(', ') : journal.indexed}
+                            </p>
                           </div>
                         </PopoverContent>
                       </Popover>
