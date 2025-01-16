@@ -240,51 +240,68 @@ export function SearchResults({
     return selectedCount > 0 && selectedCount < items.length;
   }, [items, selectedItems]);
 
-  // Update the header section to include the copy button when items are selected
+  // Update the renderHeaderActions function
   const renderHeaderActions = () => (
-    <div className="flex justify-center sm:justify-end gap-2 items-center">
+    <div className="flex justify-center sm:justify-end items-center">
+      
+      {/* Group 1: Copy Selection Button (when items are selected) */}
       {Object.keys(selectedItems).length > 0 && (
-        <Tooltip content="Copy Selected">
+        <div className="flex items-center px-4">
+          <Tooltip content="Copy Selected">
+            <Button
+              isIconOnly
+              variant="flat"
+              color="primary"
+              size="sm"
+              onClick={copySelectedItems}
+              className="transition-transform hover:scale-105"
+            >
+              <CopyCheck className="h-4 w-4" />
+            </Button>
+          </Tooltip>
+        </div>
+      )}
+
+      {/* Group 2: View Mode Controls */}
+      <div className="flex items-center gap-2 px-4 py-2 bg-default-100 rounded-lg">
+        <span className="text-sm text-default-600 hidden sm:block">View:</span>
+        <div className="flex gap-1">
           <Button
             isIconOnly
-            variant="light"
-            onClick={copySelectedItems}
+            size="sm"
+            variant={viewMode === 'table' ? "solid" : "light"}
+            onClick={() => onViewModeChange('table')}
           >
-            <CopyCheck className="h-4 w-4 text-primary" />
+            <List className={viewMode === 'table' ? 'text-white' : 'text-default-500'} />
           </Button>
-        </Tooltip>
-      )}
-      <div className="flex gap-2">
-        <Button
-          isIconOnly
-          variant="light"
-          onClick={() => onViewModeChange('table')}
-        >
-          <List className={viewMode === 'table' ? 'text-primary' : 'text-gray-400'} />
-        </Button>
-        <Button
-          isIconOnly
-          variant="light"
-          onClick={() => onViewModeChange('card')}
-        >
-          <Grid className={viewMode === 'card' ? 'text-primary' : 'text-gray-400'} />
-        </Button>
+          <Button
+            isIconOnly
+            size="sm"
+            variant={viewMode === 'card' ? "solid" : "light"}
+            onClick={() => onViewModeChange('card')}
+          >
+            <Grid className={viewMode === 'card' ? 'text-white' : 'text-default-500'} />
+          </Button>
+        </div>
       </div>
-      <div className="border-l h-6 mx-2"></div>
-      <Dropdown>
-        <DropdownTrigger>
-          <Button 
-            variant="light" 
-            endContent={<ChevronDown className="h-4 w-4" />}
-            className="min-w-[120px]"
-          >
-            <span className="hidden sm:inline">Sort by: </span>
-            <span className="truncate">
-              {currentSortOption} ({currentSortOrder})
-            </span>
-          </Button>
-        </DropdownTrigger>
-        <DropdownMenu 
+
+      {/* Group 3: Sort Controls */}
+      <div className="flex items-center gap-2 px-4 py-2 bg-default-100 rounded-lg ml-2">
+        <span className="text-sm text-default-600 hidden sm:block">Sort:</span>
+        <Dropdown>
+          <DropdownTrigger>
+            <Button 
+              variant="light" 
+              size="sm"
+              endContent={<ChevronDown className="h-4 w-4" />}
+              className="min-w-[120px]"
+            >
+              <span className="truncate">
+                {currentSortOption} ({currentSortOrder})
+              </span>
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu 
           selectedKeys={new Set([currentSortOption])}
           selectionMode="single"
           aria-label="Sort options"
@@ -304,7 +321,8 @@ export function SearchResults({
             </DropdownItem>
           ))}
         </DropdownMenu>
-      </Dropdown>
+        </Dropdown>
+      </div>
     </div>
   );
 
@@ -322,7 +340,7 @@ export function SearchResults({
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 bg-content1 p-4 rounded-lg shadow-sm">
         <h2 className="text-xl font-semibold text-center sm:text-left">
           Found {uniqueJournals.length} {uniqueJournals.length === 1 ? 'result' : 'results'}
         </h2>
