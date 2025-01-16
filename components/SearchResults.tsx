@@ -19,9 +19,10 @@ import {
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
-  DropdownItem
+  DropdownItem,
+  Checkbox
 } from '@nextui-org/react';
-import { List, Grid, ChevronRight, Copy, ChevronDown, ChevronUp, ArrowUp, ArrowDown } from 'lucide-react';
+import { List, Grid, ChevronRight, Copy, ChevronDown, ChevronUp, ArrowUp, ArrowDown, CopyCheck } from 'lucide-react';
 import { Journal } from '../app/models';
 
 const truncateText = (text: string, maxLength: number = 50, isCompactColumn: boolean = false) => {
@@ -38,16 +39,18 @@ const isValidValue = (value: any): boolean => {
   return true;
 };
 
-const formatJournalForCopy = (journal: Journal) => {
+// Update the formatJournalForCopy function to accept serialNumber
+const formatJournalForCopy = (journal: Journal, serialNumber?: number) => {
   const indexed = Array.isArray(journal.indexed) ? journal.indexed.join(', ') : journal.indexed || '-';
   return `
-Title: ${journal.title || '-'} \n
-Link: ${journal.link || '-'} \n
-Impact Factor: ${isValidValue(journal.impactFactor) ? journal.impactFactor : '-'} \n
-CiteScore: ${isValidValue(journal.citeScore) ? journal.citeScore : '-'} \n
-ISSN: ${journal.issn || '-'} \n
-Indexed: ${indexed} \n
-Publisher: ${journal.publisher || '-'} \n
+${serialNumber ? `S.No: ${serialNumber}\n` : ''}
+Title: ${journal.title || '-'}
+Link: ${journal.link || '-'}
+Impact Factor: ${isValidValue(journal.impactFactor) ? journal.impactFactor : '-'}
+CiteScore: ${isValidValue(journal.citeScore) ? journal.citeScore : '-'}
+ISSN: ${journal.issn || '-'}
+Indexed: ${indexed}
+Publisher: ${journal.publisher || '-'}
   `.trim();
 };
 
@@ -91,6 +94,11 @@ interface SearchResultsProps {
   currentSortOrder: 'asc' | 'desc'; // Add this
 }
 
+// Add new interface for selected items
+interface SelectedItems {
+  [key: string]: boolean;
+}
+
 export function SearchResults({ 
   journals, 
   viewMode, 
@@ -105,6 +113,7 @@ export function SearchResults({
   const [visibleItems, setVisibleItems] = useState(10);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [selectedItems, setSelectedItems] = useState<SelectedItems>({});
 
   const handleSortChange = (option: string) => {
     let newSortOrder: 'asc' | 'desc';
@@ -170,6 +179,135 @@ export function SearchResults({
     };
   }, [uniqueJournals, viewMode]); // Add viewMode as dependency
 
+  // Add helper functions for selection
+  const handleSelectAll = (isSelected: boolean) => {
+    const newSelected: SelectedItems = {};
+    if (isSelected) {
+      items.forEach((journal) => {
+        newSelected[`${journal.issn}-${journal.title}`] = true;
+      });
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const handleSelectOne = (key: string, isSelected: boolean) => {
+    setSelectedItems(prev => {
+      const newSelected = { ...prev };
+      if (isSelected) {
+        newSelected[key] = true;
+      } else {
+        delete newSelected[key];
+      }
+      return newSelected;
+    });
+  };
+
+  // Add function to copy multiple items
+  const copySelectedItems = () => {
+    const selectedJournals = items
+      .filter(journal => selectedItems[`${journal.issn}-${journal.title}`])
+      .map((journal, index) => {
+        const itemIndex = items.findIndex(item => 
+          `${item.issn}-${item.title}` === `${journal.issn}-${journal.title}`
+        );
+        return {
+          journal,
+          serialNumber: (page - 1) * rowsPerPage + itemIndex + 1
+        };
+      });
+    
+    if (selectedJournals.length === 0) return;
+
+    const textToCopy = selectedJournals
+      .map(({ journal, serialNumber }) => formatJournalForCopy(journal, serialNumber))
+      .join('\n\n---\n\n');
+    
+    copyToClipboard(textToCopy);
+  };
+
+  // Add computed value for select all state
+  const isAllSelected = useMemo(() => {
+    return items.length > 0 && 
+      items.every(journal => 
+        selectedItems[`${journal.issn}-${journal.title}`]
+      );
+  }, [items, selectedItems]);
+
+  const isIndeterminate = useMemo(() => {
+    const selectedCount = items.filter(journal => 
+      selectedItems[`${journal.issn}-${journal.title}`]
+    ).length;
+    return selectedCount > 0 && selectedCount < items.length;
+  }, [items, selectedItems]);
+
+  // Update the header section to include the copy button when items are selected
+  const renderHeaderActions = () => (
+    <div className="flex justify-center sm:justify-end gap-2 items-center">
+      {Object.keys(selectedItems).length > 0 && (
+        <Tooltip content="Copy Selected">
+          <Button
+            isIconOnly
+            variant="light"
+            onClick={copySelectedItems}
+          >
+            <CopyCheck className="h-4 w-4 text-primary" />
+          </Button>
+        </Tooltip>
+      )}
+      <div className="flex gap-2">
+        <Button
+          isIconOnly
+          variant="light"
+          onClick={() => onViewModeChange('table')}
+        >
+          <List className={viewMode === 'table' ? 'text-primary' : 'text-gray-400'} />
+        </Button>
+        <Button
+          isIconOnly
+          variant="light"
+          onClick={() => onViewModeChange('card')}
+        >
+          <Grid className={viewMode === 'card' ? 'text-primary' : 'text-gray-400'} />
+        </Button>
+      </div>
+      <div className="border-l h-6 mx-2"></div>
+      <Dropdown>
+        <DropdownTrigger>
+          <Button 
+            variant="light" 
+            endContent={<ChevronDown className="h-4 w-4" />}
+            className="min-w-[120px]"
+          >
+            <span className="hidden sm:inline">Sort by: </span>
+            <span className="truncate">
+              {currentSortOption} ({currentSortOrder})
+            </span>
+          </Button>
+        </DropdownTrigger>
+        <DropdownMenu 
+          selectedKeys={new Set([currentSortOption])}
+          selectionMode="single"
+          aria-label="Sort options"
+        >
+          {[{ key: 'impactFactor', label: 'Impact Factor' },
+            { key: 'citeScore', label: 'CiteScore' },
+            { key: 'title', label: 'Title' },
+            { key: 'publisher', label: 'Publisher' }
+          ].map(({ key, label }) => (
+            <DropdownItem 
+              key={key}
+              onClick={() => handleSortChange(key)}
+              endContent={renderSortIcon(key)}
+              className="flex justify-between items-center"
+            >
+              {label}
+            </DropdownItem>
+          ))}
+        </DropdownMenu>
+      </Dropdown>
+    </div>
+  );
+
   if (!hasSearched) {
     return null; // Don't render anything if search hasn't been performed
   }
@@ -188,59 +326,7 @@ export function SearchResults({
         <h2 className="text-xl font-semibold text-center sm:text-left">
           Found {uniqueJournals.length} {uniqueJournals.length === 1 ? 'result' : 'results'}
         </h2>
-        <div className="flex justify-center sm:justify-end gap-2 items-center">
-          <div className="flex gap-2">
-            <Button
-              isIconOnly
-              variant="light"
-              onClick={() => onViewModeChange('table')}
-            >
-              <List className={viewMode === 'table' ? 'text-primary' : 'text-gray-400'} />
-            </Button>
-            <Button
-              isIconOnly
-              variant="light"
-              onClick={() => onViewModeChange('card')}
-            >
-              <Grid className={viewMode === 'card' ? 'text-primary' : 'text-gray-400'} />
-            </Button>
-          </div>
-          <div className="border-l h-6 mx-2"></div>
-          <Dropdown>
-            <DropdownTrigger>
-              <Button 
-                variant="light" 
-                endContent={<ChevronDown className="h-4 w-4" />}
-                className="min-w-[120px]"
-              >
-                <span className="hidden sm:inline">Sort by: </span>
-                <span className="truncate">
-                  {currentSortOption} ({currentSortOrder})
-                </span>
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu 
-              selectedKeys={new Set([currentSortOption])}
-              selectionMode="single"
-              aria-label="Sort options"
-            >
-              {[{ key: 'impactFactor', label: 'Impact Factor' },
-                { key: 'citeScore', label: 'CiteScore' },
-                { key: 'title', label: 'Title' },
-                { key: 'publisher', label: 'Publisher' }
-              ].map(({ key, label }) => (
-                <DropdownItem 
-                  key={key}
-                  onClick={() => handleSortChange(key)}
-                  endContent={renderSortIcon(key)}
-                  className="flex justify-between items-center"
-                >
-                  {label}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          </Dropdown>
-        </div>
+        {renderHeaderActions()}
       </div>
 
       {viewMode === 'table' ? (
@@ -264,7 +350,14 @@ export function SearchResults({
             }
           >
             <TableHeader>
-              <TableColumn>S.No</TableColumn>  {/* Add this line */}
+              <TableColumn>
+                <Checkbox
+                  isSelected={isAllSelected}
+                  isIndeterminate={isIndeterminate}
+                  onValueChange={handleSelectAll}
+                />
+              </TableColumn>
+              <TableColumn>S.No</TableColumn>
               <TableColumn>Title</TableColumn>
               <TableColumn>Link</TableColumn>
               <TableColumn>Impact Factor</TableColumn>
@@ -277,7 +370,15 @@ export function SearchResults({
             </TableHeader>
             <TableBody>
               {items.map((journal, index) => (
-                <TableRow key={journal.issn + journal.title}>
+                <TableRow key={`${journal.issn}-${journal.title}`}>
+                  <TableCell>
+                    <Checkbox
+                      isSelected={!!selectedItems[`${journal.issn}-${journal.title}`]}
+                      onValueChange={(isSelected) => 
+                        handleSelectOne(`${journal.issn}-${journal.title}`, isSelected)
+                      }
+                    />
+                  </TableCell>
                   <TableCell>
                     {/* Calculate serial number based on current page */}
                     {(page - 1) * rowsPerPage + index + 1}
@@ -353,7 +454,10 @@ export function SearchResults({
                       <Button 
                         isIconOnly 
                         variant="light" 
-                        onClick={() => copyToClipboard(formatJournalForCopy(journal))}
+                        onClick={() => copyToClipboard(formatJournalForCopy(
+                          journal,
+                          (page - 1) * rowsPerPage + index + 1
+                        ))}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
