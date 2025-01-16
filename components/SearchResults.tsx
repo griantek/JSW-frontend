@@ -202,7 +202,7 @@ export function SearchResults({
     });
   };
 
-  // Add function to copy multiple items
+  // Update the copySelectedItems function
   const copySelectedItems = () => {
     const selectedJournals = items
       .filter(journal => selectedItems[`${journal.issn}-${journal.title}`])
@@ -222,7 +222,9 @@ export function SearchResults({
       .map(({ journal, serialNumber }) => formatJournalForCopy(journal, serialNumber))
       .join('\n\n---\n\n');
     
+    // Copy and clear selections
     copyToClipboard(textToCopy);
+    setSelectedItems({}); // Clear all selections after copying
   };
 
   // Add computed value for select all state
