@@ -5,5 +5,5 @@ export const API_CONFIG = {
 };
 
 export const API_ENDPOINTS = {
-  search: '/api/journals/search',
+  search: '/journals/search',
 };
